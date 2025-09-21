@@ -8,7 +8,7 @@ import { Filter, Search, Calendar, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { PipelineStage } from "@/types/pipeline";
-import { Tables } from "@/types/supabase";
+import { Tables } from "@/integrations/supabase/types";
 
 const Pipeline = () => {
   const [stages, setStages] = useState<PipelineStage[]>([]);
@@ -36,7 +36,7 @@ const Pipeline = () => {
 
       const stagesWithDeals: PipelineStage[] = stagesData.map((stage) => ({
         ...stage,
-        deals: dealsData.filter((deal) => deal.stage_id === stage.id) as Tables<'deals'>[],
+        deals: dealsData.filter((deal) => deal.stage_id === stage.id),
       }));
 
       setStages(stagesWithDeals);

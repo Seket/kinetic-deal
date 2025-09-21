@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createDeal, getPipelineStages, getCompanies } from "@/lib/supabase";
 import { useEffect, useState } from "react";
-import { Tables } from "@/types/supabase";
+import { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
 const dealSchema = z.object({
@@ -79,7 +79,15 @@ export const CreateDealDialog = ({ children, onDealCreated }: CreateDealDialogPr
 
   const onSubmit = async (values: z.infer<typeof dealSchema>) => {
     try {
-      await createDeal(values);
+      // Ensure all required fields are present
+      const dealData = {
+        title: values.title,
+        value: values.value,
+        stage_id: values.stage_id,
+        company_id: values.company_id || undefined,
+        description: values.description || undefined,
+      };
+      await createDeal(dealData);
       toast({
         title: "Deal Created",
         description: "The new deal has been added to your pipeline.",

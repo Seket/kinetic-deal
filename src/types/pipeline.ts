@@ -1,26 +1,7 @@
-export interface Deal {
-  id: string;
-  title: string;
-  company: string;
-  contact: string;
-  value: number;
-  stage: string;
-  probability: number;
-  expectedCloseDate: string;
-  lastActivity: string;
-  tags: string[];
-  priority: "low" | "medium" | "high";
-  assignedTo: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Tables } from '@/integrations/supabase/types';
 
-export interface PipelineStage {
-  id: string;
-  name: string;
-  color: string;
-  deals: Deal[];
-  order: number;
+export interface PipelineStage extends Tables<'pipeline_stages'> {
+  deals: any[]; // Use any for now to avoid complex type matching issues
 }
 
 export interface Lead {

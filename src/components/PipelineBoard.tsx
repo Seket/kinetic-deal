@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { PipelineStage, Deal } from "@/types/pipeline";
+import { PipelineStage } from "@/types/pipeline";
+import { Tables } from "@/integrations/supabase/types";
 import { DealCard } from "@/components/DealCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,7 @@ export const PipelineBoard = ({ stages, onDealMove }: PipelineBoardProps) => {
 
     // Find the deal and its current stage
     let currentStage: PipelineStage | undefined;
-    let deal: Deal | undefined;
+    let deal: Tables<'deals'> | undefined;
 
     for (const stage of stages) {
       const foundDeal = stage.deals.find(d => d.id === dealId);
@@ -56,8 +57,8 @@ export const PipelineBoard = ({ stages, onDealMove }: PipelineBoardProps) => {
     }).format(value);
   };
 
-  const calculateStageValue = (deals: Deal[]) => {
-    return deals.reduce((total, deal) => total + deal.value, 0);
+  const calculateStageValue = (deals: PipelineStage['deals']) => {
+    return deals.reduce((total, deal) => total + (deal.value || 0), 0);
   };
 
   return (

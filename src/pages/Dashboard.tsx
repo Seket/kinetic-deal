@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import { getDeals, getActivities, getLeads } from "@/lib/supabase";
-import { Tables } from "@/types/supabase";
+import { Tables } from "@/integrations/supabase/types";
 import { formatDistanceToNow } from 'date-fns';
 
 const Dashboard = () => {
