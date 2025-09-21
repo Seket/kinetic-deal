@@ -63,8 +63,8 @@ export const signOut = async () => {
 };
 
 // Data fetching helpers
-export const getDeals = async () => {
-  const { data, error } = await supabase
+export const getDeals = async (filters: { search?: string; owner?: string } = {}) => {
+  let query = supabase
     .from('deals')
     .select(`
       *,
@@ -75,8 +75,22 @@ export const getDeals = async () => {
       deal_tags(
         tag:tags(*)
       )
-    `)
-    .order('created_at', { ascending: false });
+    `);
+
+  if (filters.search) {
+    query = query.ilike('title', `%${filters.search}%`);
+  }
+
+  if (filters.owner) {
+    const user = await getCurrentUser();
+    if (filters.owner === 'my' && user) {
+      query = query.eq('assigned_to', user.id);
+    }
+    // 'team' and 'all' filters would require more complex logic
+    // depending on the team structure, which is not defined yet.
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) throw error;
   return data;

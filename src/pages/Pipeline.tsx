@@ -1,23 +1,65 @@
 import { PipelineBoard } from "@/components/PipelineBoard";
-import { pipelineStages } from "@/data/mockData";
+import { getPipelineStages, getDeals, moveDeal } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, Search, Calendar, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { PipelineStage } from "@/types/pipeline";
+import { Tables } from "@/types/supabase";
 
 const Pipeline = () => {
-  const handleDealMove = (dealId: string, newStage: string) => {
-    console.log(`Deal ${dealId} moved to stage ${newStage}`);
-    // Here you would typically update your backend or state management
+  const [stages, setStages] = useState<PipelineStage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("all");
+
+  const handleDealMove = async (dealId: string, newStageId: string) => {
+    try {
+      await moveDeal(dealId, newStageId);
+      // Refresh data after moving a deal
+      fetchData();
+    } catch (error) {
+      console.error("Error moving deal:", error);
+    }
   };
 
-  const totalValue = pipelineStages.reduce((total, stage) => 
-    total + stage.deals.reduce((stageTotal, deal) => stageTotal + deal.value, 0), 0
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [stagesData, dealsData] = await Promise.all([
+        getPipelineStages(),
+        getDeals({ search, owner: ownerFilter }),
+      ]);
+
+      const stagesWithDeals: PipelineStage[] = stagesData.map((stage) => ({
+        ...stage,
+        deals: dealsData.filter((deal) => deal.stage_id === stage.id) as Tables<'deals'>[],
+      }));
+
+      setStages(stagesWithDeals);
+    } catch (error) {
+      console.error("Error fetching pipeline data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchData();
+    }, 500); // Debounce search input
+
+    return () => clearTimeout(debounceTimer);
+  }, [search, ownerFilter]);
+
+  const totalValue = stages.reduce((total, stage) =>
+    total + stage.deals.reduce((stageTotal, deal) => stageTotal + (deal.value || 0), 0), 0
   );
 
-  const totalDeals = pipelineStages.reduce((total, stage) => total + stage.deals.length, 0);
+  const totalDeals = stages.reduce((total, stage) => total + stage.deals.length, 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -98,11 +140,13 @@ const Pipeline = () => {
               <Input
                 placeholder="Search deals, companies, contacts..."
                 className="pl-10 bg-background/50"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             
             <div className="flex gap-2">
-              <Select defaultValue="all">
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
                 <SelectTrigger className="w-32">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue />
@@ -144,7 +188,13 @@ const Pipeline = () => {
       </Card>
 
       {/* Pipeline Board */}
-      <PipelineBoard stages={pipelineStages} onDealMove={handleDealMove} />
+      {loading ? (
+        <div className="flex justify-center items-center h-96">
+          <p>Loading pipeline...</p>
+        </div>
+      ) : (
+        <PipelineBoard stages={stages} onDealMove={handleDealMove} />
+      )}
     </div>
   );
 };
