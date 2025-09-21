@@ -153,7 +153,7 @@ export const getLeads = async () => {
     .from('leads')
     .select(`
       *,
-      assigned_user:users(*)
+      assigned_user:users!leads_assigned_to_fkey(*)
     `)
     .order('created_at', { ascending: false });
 
