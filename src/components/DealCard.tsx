@@ -1,4 +1,4 @@
-import { Deal } from "@/types/pipeline";
+import { Tables } from "@/types/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -7,7 +7,12 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 interface DealCardProps {
-  deal: Deal;
+  deal: Tables<'deals'> & {
+    company: Tables<'companies'> | null;
+    primary_contact: Tables<'contacts'> | null;
+    assigned_user: Tables<'users'> | null;
+    deal_tags: { tag: Tables<'tags'> }[];
+  };
 }
 
 export const DealCard = ({ deal }: DealCardProps) => {
@@ -80,19 +85,21 @@ export const DealCard = ({ deal }: DealCardProps) => {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Building2 className="h-3 w-3" />
-            <span className="font-medium">{deal.company}</span>
+            <span className="font-medium">{deal.company?.name || 'N/A'}</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <User className="h-3 w-3" />
-            <span>{deal.contact}</span>
-          </div>
+          {deal.primary_contact &&
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <User className="h-3 w-3" />
+              <span>{deal.primary_contact.first_name} {deal.primary_contact.last_name}</span>
+            </div>
+          }
         </div>
 
         {/* Deal Value */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-lg font-bold text-primary">
             <DollarSign className="h-4 w-4" />
-            {formatCurrency(deal.value)}
+            {formatCurrency(deal.value || 0)}
           </div>
           <div className="flex items-center gap-1 text-xs text-success">
             <TrendingUp className="h-3 w-3" />
@@ -101,36 +108,41 @@ export const DealCard = ({ deal }: DealCardProps) => {
         </div>
 
         {/* Expected Close Date */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Calendar className="h-3 w-3" />
-          <span>Close: {formatDate(deal.expectedCloseDate)}</span>
-        </div>
+        {deal.expected_close_date &&
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            <span>Close: {formatDate(deal.expected_close_date)}</span>
+          </div>
+        }
 
         {/* Tags */}
-        {deal.tags.length > 0 && (
+        {deal.deal_tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {deal.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs px-2 py-0">
-                {tag}
+            {deal.deal_tags.slice(0, 2).map(({ tag }) => (
+              <Badge key={tag.id} variant="outline" className="text-xs px-2 py-0">
+                {tag.name}
               </Badge>
             ))}
-            {deal.tags.length > 2 && (
+            {deal.deal_tags.length > 2 && (
               <Badge variant="outline" className="text-xs px-2 py-0">
-                +{deal.tags.length - 2}
+                +{deal.deal_tags.length - 2}
               </Badge>
             )}
           </div>
         )}
 
         {/* Assigned To */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-          <Avatar className="h-6 w-6">
-            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-              {deal.assignedTo.split(" ").map(n => n[0]).join("")}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground">{deal.assignedTo}</span>
-        </div>
+        {deal.assigned_user &&
+          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={deal.assigned_user.avatar_url || ''} />
+              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                {deal.assigned_user.full_name?.split(" ").map(n => n[0]).join("")}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-muted-foreground">{deal.assigned_user.full_name}</span>
+          </div>
+        }
       </CardContent>
     </Card>
   );

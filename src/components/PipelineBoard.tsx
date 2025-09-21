@@ -13,9 +13,7 @@ interface PipelineBoardProps {
   onDealMove?: (dealId: string, newStage: string) => void;
 }
 
-export const PipelineBoard = ({ stages: initialStages, onDealMove }: PipelineBoardProps) => {
-  const [stages, setStages] = useState(initialStages);
-  
+export const PipelineBoard = ({ stages, onDealMove }: PipelineBoardProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -46,25 +44,6 @@ export const PipelineBoard = ({ stages: initialStages, onDealMove }: PipelineBoa
 
     if (!deal || !currentStage || currentStage.id === newStageId) return;
 
-    // Update the stages
-    const updatedStages = stages.map(stage => {
-      if (stage.id === currentStage!.id) {
-        // Remove deal from current stage
-        return {
-          ...stage,
-          deals: stage.deals.filter(d => d.id !== dealId)
-        };
-      } else if (stage.id === newStageId) {
-        // Add deal to new stage
-        return {
-          ...stage,
-          deals: [...stage.deals, { ...deal!, stage: newStageId }]
-        };
-      }
-      return stage;
-    });
-
-    setStages(updatedStages);
     onDealMove?.(dealId, newStageId);
   };
 
