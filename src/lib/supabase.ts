@@ -31,6 +31,16 @@ export const getCurrentUserProfile = async () => {
   return data;
 };
 
+export const getCompanies = async () => {
+  const { data, error } = await supabase
+    .from('companies')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
 // Auth helpers
 export const signUp = async (email: string, password: string, fullName: string) => {
   const { data, error } = await supabase.auth.signUp({
